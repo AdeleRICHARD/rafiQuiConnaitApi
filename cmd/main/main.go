@@ -1,27 +1,15 @@
 package main
 
 import (
+	"fmt"
 	"log"
+
+	"rafiQuiConnaitApi/internal/domain/attraction"
+	"rafiQuiConnaitApi/internal/domain/producer/csvReader"
 	"rafiQuiConnaitApi/internal/domain/producer/elasticsearch"
 
 	"github.com/gin-gonic/gin"
 )
-
-var esClient *elasticsearch.EsClient
-
-func init() {
-	var err error
-	esClient, err = elasticsearch.NewEsClient()
-	if err != nil {
-		log.Fatalf("Failed to create ES client: %v", err)
-	}
-
-	// Créer l'index s'il n'existe pas déjà
-	err = esClient.CreateIndex("attractions")
-	if err != nil {
-		log.Fatalf("Failed to create ES index: %v", err)
-	}
-}
 
 func main() {
 	r := gin.Default()
@@ -32,7 +20,23 @@ func main() {
 		})
 	})
 
-	// Ajoutez plus de routes qui utilisent esClient ici...
+	esClient, err := elasticsearch.NewEsClient()
+	if err != nil {
+		log.Fatalf("Error creating ES client: %s", err)
+	}
+
+	err = esClient.CreateIndex("attractions")
+	if err != nil {
+		fmt.Errorf("Error creating index: %s", err)
+	}
+
+	csvReader := csvReader.NewCSVReader()
+
+	attractionHandler := attraction.NewAttractionHandler(esClient, csvReader)
+	err = attractionHandler.ProcessCSV("../../attractions.csv")
+	if err != nil {
+		log.Fatalf("Error processing CSV file: %s", err)
+	}
 
 	r.Run() // listen and serve on 0.0.0.0:8080
 }

@@ -2,7 +2,11 @@ package elasticsearch
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"log"
+	"rafiQuiConnaitApi/internal/domain/model"
+	"strings"
 
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/elastic/go-elasticsearch/v8/esapi"
@@ -27,11 +31,16 @@ func NewEsClient() (*EsClient, error) {
 	return &EsClient{Client: client}, nil
 }
 
-/* func (es *EsClient) AddAttraction(attraction model.Attraction) error {
+func (es *EsClient) AddAttraction(attraction model.Attraction) error {
+	jsonAttraction, err := json.Marshal(attraction)
+	if err != nil {
+		log.Fatalf("Error marshalling the attraction: %s", err)
+	}
+
 	req := esapi.IndexRequest{
 		Index:      "attractions",
 		DocumentID: attraction.ID,
-		Body:       strings.NewReader(attraction.JSON()),
+		Body:       strings.NewReader(string(jsonAttraction)),
 		Refresh:    "true",
 	}
 
@@ -46,7 +55,7 @@ func NewEsClient() (*EsClient, error) {
 	}
 
 	return nil
-} */
+}
 
 func (es *EsClient) CreateIndex(indexName string) error {
 	req := esapi.IndicesCreateRequest{
@@ -60,7 +69,7 @@ func (es *EsClient) CreateIndex(indexName string) error {
 	defer res.Body.Close()
 
 	if res.IsError() {
-		log.Fatalf("Error creating index: %s", res.String())
+		fmt.Errorf("Error creating index: %s", res.String())
 	}
 
 	return nil
