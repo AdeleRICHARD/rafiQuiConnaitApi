@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "embed"
 	"fmt"
 	"log"
 
@@ -33,7 +34,8 @@ func main() {
 	csvReader := csvReader.NewCSVReader()
 
 	attractionHandler := attraction.NewAttractionHandler(esClient, csvReader)
-	err = attractionHandler.ProcessCSV("../../attractions.csv")
+	// Process the CSV file
+	err = attractionHandler.ProcessCSV()
 	if err != nil {
 		log.Fatalf("Error processing CSV file: %s", err)
 	}

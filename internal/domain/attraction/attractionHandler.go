@@ -1,12 +1,18 @@
 package attraction
 
 import (
+	"embed"
+	_ "embed"
+	"encoding/csv"
 	"log"
 	"rafiQuiConnaitApi/internal/domain/model"
 	"rafiQuiConnaitApi/internal/domain/producer/csvReader"
 	"rafiQuiConnaitApi/internal/domain/producer/elasticsearch"
 	"strings"
 )
+
+//go:embed attractions.csv
+var attractionsCSV embed.FS
 
 type AttractionHandler struct {
 	esClient  *elasticsearch.EsClient
@@ -20,8 +26,14 @@ func NewAttractionHandler(esClient *elasticsearch.EsClient, csvReader *csvReader
 	}
 }
 
-func (h *AttractionHandler) ProcessCSV(file string) error {
-	lines, err := h.csvReader.Read(file)
+func (h *AttractionHandler) ProcessCSV() error {
+	attractionsCSVRead, err := attractionsCSV.ReadFile("attractions.csv")
+	if err != nil {
+		return err
+	}
+
+	r := csv.NewReader(strings.NewReader(string(attractionsCSVRead)))
+	lines, err := r.ReadAll()
 	if err != nil {
 		return err
 	}
